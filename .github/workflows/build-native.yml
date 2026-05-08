@@ -1,4 +1,4 @@
-  name: Build Native Lightpanda
+• name: Build Native Lightpanda
 
   on:
     workflow_dispatch:
@@ -9,6 +9,7 @@
   jobs:
     build-linux-aarch64-musl:
       runs-on: ubuntu-24.04
+
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -16,7 +17,7 @@
             submodules: recursive
 
         - name: Setup Zig
-          uses: mlugg/setup-zig@v1
+          uses: goto-bus-stop/setup-zig@v2
           with:
             version: 0.14.1
 
@@ -32,15 +33,18 @@
         - name: Locate output
           run: |
             ls -lah zig-out || true
-            find zig-out -maxdepth 4 -type f -executable -print
+            find zig-out -maxdepth 6 -type f -executable -print
 
         - name: Package binary
+          shell: bash
           run: |
-            BIN="$(find zig-out -maxdepth 4 -type f -executable | head -n1)"
+            set -euo pipefail
+            BIN="$(find zig-out -maxdepth 6 -type f -executable | head -n1)"
             test -n "$BIN"
             cp "$BIN" lightpanda-aarch64-linux-musl
             chmod +x lightpanda-aarch64-linux-musl
             tar -czf lightpanda-aarch64-linux-musl.tar.gz lightpanda-aarch64-linux-musl
+            sha256sum lightpanda-aarch64-linux-musl > lightpanda-aarch64-linux-musl.sha256
 
         - name: Upload artifact
           uses: actions/upload-artifact@v4
@@ -49,3 +53,4 @@
             path: |
               lightpanda-aarch64-linux-musl
               lightpanda-aarch64-linux-musl.tar.gz
+              lightpanda-aarch64-linux-musl.sha256
