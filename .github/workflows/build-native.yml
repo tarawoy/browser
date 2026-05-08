@@ -12,6 +12,7 @@ permissions:
 jobs:
   build-linux-aarch64-musl:
     runs-on: ubuntu-24.04
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -30,7 +31,7 @@ jobs:
           uname -a
 
       - name: Build (aarch64 musl)
-        run: zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl
+        run: zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl --verbose
 
       - name: Locate output
         run: |
