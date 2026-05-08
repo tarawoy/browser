@@ -1,4 +1,4 @@
-name: Build Native Lightpanda
+name: Build AArch64 Lightpanda
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build-linux-aarch64-musl:
+  build-linux-aarch64:
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 30
 
@@ -34,8 +34,8 @@ jobs:
       - name: Build V8 snapshot
         run: zig build -Dprebuilt_v8_path=v8/libc_v8.a -Doptimize=ReleaseFast snapshot_creator -- src/snapshot.bin
 
-      - name: Build (aarch64 musl)
-        run: zig build -Dsnapshot_path=../../snapshot.bin -Dprebuilt_v8_path=v8/libc_v8.a -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl -Dcpu=generic --verbose
+      - name: Build (aarch64 linux)
+        run: zig build -Dsnapshot_path=../../snapshot.bin -Dprebuilt_v8_path=v8/libc_v8.a -Doptimize=ReleaseFast -Dcpu=generic --verbose
 
       - name: Locate output
         run: |
@@ -49,16 +49,16 @@ jobs:
           BIN="zig-out/bin/lightpanda"
           test -n "$BIN"
           test -x "$BIN"
-          cp "$BIN" lightpanda-aarch64-linux-musl
-          chmod +x lightpanda-aarch64-linux-musl
-          tar -czf lightpanda-aarch64-linux-musl.tar.gz lightpanda-aarch64-linux-musl
-          sha256sum lightpanda-aarch64-linux-musl > lightpanda-aarch64-linux-musl.sha256
+          cp "$BIN" lightpanda-aarch64-linux
+          chmod +x lightpanda-aarch64-linux
+          tar -czf lightpanda-aarch64-linux.tar.gz lightpanda-aarch64-linux
+          sha256sum lightpanda-aarch64-linux > lightpanda-aarch64-linux.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lightpanda-aarch64-linux-musl
+          name: lightpanda-aarch64-linux
           path: |
-            lightpanda-aarch64-linux-musl
-            lightpanda-aarch64-linux-musl.tar.gz
-            lightpanda-aarch64-linux-musl.sha256
+            lightpanda-aarch64-linux
+            lightpanda-aarch64-linux.tar.gz
+            lightpanda-aarch64-linux.sha256
