@@ -1,56 +1,58 @@
 name: Build Native Lightpanda
 
-  on:
-    workflow_dispatch:
-    push:
-      tags:
-        - "v*"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
 
-  jobs:
-    build-linux-aarch64-musl:
-      runs-on: ubuntu-24.04
+permissions:
+  contents: read
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            submodules: recursive
+jobs:
+  build-linux-aarch64-musl:
+    runs-on: ubuntu-24.04
 
-        - name: Setup Zig
-          uses: goto-bus-stop/setup-zig@v2
-          with:
-            version: 0.14.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-        - name: Show tool versions
-          run: |
-            zig version
-            uname -a
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.14.1
 
-        - name: Build (aarch64 musl)
-          run: |
-            zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl
+      - name: Show tool versions
+        run: |
+          zig version
+          uname -a
 
-        - name: Locate output
-          run: |
-            ls -lah zig-out || true
-            find zig-out -maxdepth 6 -type f -executable -print
+      - name: Build (aarch64 musl)
+        run: zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl
 
-        - name: Package binary
-          shell: bash
-          run: |
-            set -euo pipefail
-            BIN="$(find zig-out -maxdepth 6 -type f -executable | head -n1)"
-            test -n "$BIN"
-            cp "$BIN" lightpanda-aarch64-linux-musl
-            chmod +x lightpanda-aarch64-linux-musl
-            tar -czf lightpanda-aarch64-linux-musl.tar.gz lightpanda-aarch64-linux-musl
-            sha256sum lightpanda-aarch64-linux-musl > lightpanda-aarch64-linux-musl.sha256
+      - name: Locate output
+        run: |
+          ls -lah zig-out || true
+          find zig-out -maxdepth 6 -type f -executable -print
 
-        - name: Upload artifact
-          uses: actions/upload-artifact@v4
-          with:
-            name: lightpanda-aarch64-linux-musl
-            path: |
-              lightpanda-aarch64-linux-musl
-              lightpanda-aarch64-linux-musl.tar.gz
-              lightpanda-aarch64-linux-musl.sha256
+      - name: Package binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          BIN="$(find zig-out -maxdepth 6 -type f -executable | head -n1)"
+          test -n "$BIN"
+          cp "$BIN" lightpanda-aarch64-linux-musl
+          chmod +x lightpanda-aarch64-linux-musl
+          tar -czf lightpanda-aarch64-linux-musl.tar.gz lightpanda-aarch64-linux-musl
+          sha256sum lightpanda-aarch64-linux-musl > lightpanda-aarch64-linux-musl.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lightpanda-aarch64-linux-musl
+          path: |
+            lightpanda-aarch64-linux-musl
+            lightpanda-aarch64-linux-musl.tar.gz
+            lightpanda-aarch64-linux-musl.sha256
