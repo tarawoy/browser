@@ -11,27 +11,31 @@ permissions:
 
 jobs:
   build-linux-aarch64-musl:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    runs-on: ubuntu-22.04-arm
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+      - name: Install deps
+        uses: ./.github/actions/install
         with:
-          version: 0.15.1
+          os: linux
+          arch: aarch64
 
       - name: Show tool versions
         run: |
           zig version
           uname -a
 
+      - name: Build V8 snapshot
+        run: zig build -Dprebuilt_v8_path=v8/libc_v8.a -Doptimize=ReleaseFast snapshot_creator -- src/snapshot.bin
+
       - name: Build (aarch64 musl)
-        run: zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl --verbose
+        run: zig build -Dsnapshot_path=../../snapshot.bin -Dprebuilt_v8_path=v8/libc_v8.a -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl -Dcpu=generic --verbose
 
       - name: Locate output
         run: |
@@ -42,8 +46,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BIN="$(find zig-out -maxdepth 6 -type f -executable | head -n1)"
+          BIN="zig-out/bin/lightpanda"
           test -n "$BIN"
+          test -x "$BIN"
           cp "$BIN" lightpanda-aarch64-linux-musl
           chmod +x lightpanda-aarch64-linux-musl
           tar -czf lightpanda-aarch64-linux-musl.tar.gz lightpanda-aarch64-linux-musl
