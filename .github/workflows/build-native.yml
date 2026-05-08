@@ -1,0 +1,51 @@
+  name: Build Native Lightpanda
+
+  on:
+    workflow_dispatch:
+    push:
+      tags:
+        - "v*"
+
+  jobs:
+    build-linux-aarch64-musl:
+      runs-on: ubuntu-24.04
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            submodules: recursive
+
+        - name: Setup Zig
+          uses: mlugg/setup-zig@v1
+          with:
+            version: 0.14.1
+
+        - name: Show tool versions
+          run: |
+            zig version
+            uname -a
+
+        - name: Build (aarch64 musl)
+          run: |
+            zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-musl
+
+        - name: Locate output
+          run: |
+            ls -lah zig-out || true
+            find zig-out -maxdepth 4 -type f -executable -print
+
+        - name: Package binary
+          run: |
+            BIN="$(find zig-out -maxdepth 4 -type f -executable | head -n1)"
+            test -n "$BIN"
+            cp "$BIN" lightpanda-aarch64-linux-musl
+            chmod +x lightpanda-aarch64-linux-musl
+            tar -czf lightpanda-aarch64-linux-musl.tar.gz lightpanda-aarch64-linux-musl
+
+        - name: Upload artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: lightpanda-aarch64-linux-musl
+            path: |
+              lightpanda-aarch64-linux-musl
+              lightpanda-aarch64-linux-musl.tar.gz
