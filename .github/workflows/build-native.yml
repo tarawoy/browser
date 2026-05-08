@@ -1,4 +1,4 @@
-• name: Build Native Lightpanda
+name: Build Native Lightpanda
 
   on:
     workflow_dispatch:
